@@ -14,7 +14,6 @@ from gymnasium.wrappers import TimeLimit
 from typing import Any, Dict, List
 
 from env_hiv import HIVPatient
-from fast_env import FastHIVPatient
 import names as names
 import config as config
 
@@ -398,11 +397,12 @@ class ProjectAgent:
         print("Agent loaded.")
 
 
-if __name__ == "__main__":
-    agent = ProjectAgent(id_experiment=2)
-    agent.model.train(
-        env=TimeLimit(
-            env=FastHIVPatient(domain_randomization=False), max_episode_steps=200
-        )
-    )
-    agent.save()
+# if __name__ == "__main__":
+#     from fast_env import FastHIVPatient
+#     agent = ProjectAgent(id_experiment=2)
+#     agent.model.train(
+#         env=TimeLimit(
+#             env=FastHIVPatient(domain_randomization=False), max_episode_steps=200
+#         )
+#     )
+#     agent.save()
