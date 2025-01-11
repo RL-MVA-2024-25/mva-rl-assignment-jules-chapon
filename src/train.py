@@ -10,7 +10,6 @@ import torch.nn as nn
 import typing
 
 from copy import deepcopy
-from gymnasium.wrappers import TimeLimit
 from typing import Any, Dict, List
 
 from env_hiv import HIVPatient
@@ -319,7 +318,7 @@ class ProjectAgent:
         if self.params[names.MODEL] == names.DQN:
             self.model = DQN(params=self.params)
         self.best_model = None
-        self.folder = os.path.join("src", "saved_models")
+        self.folder = "saved_models"
         os.makedirs(self.folder, exist_ok=True)
         print("Agent created.")
 
