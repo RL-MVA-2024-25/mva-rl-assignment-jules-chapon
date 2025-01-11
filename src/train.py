@@ -13,6 +13,7 @@ from copy import deepcopy
 from gymnasium.wrappers import TimeLimit
 from typing import Any, Dict, List
 
+from env_hiv import HIVPatient
 from fast_env import FastHIVPatient
 import names as names
 import config as config
@@ -232,13 +233,13 @@ class DQN:
             loss.backward()
             self.optimizer.step()
 
-    def train(self: _DQN, env: FastHIVPatient):
+    def train(self: _DQN, env: HIVPatient):
         """
         Train the model.
 
         Args:
             self (_DQN): Class instance.
-            env (FastHIVPatient): Environment.
+            env (HIVPatient): Environment.
         """
         epoch = 0
         epoch_cum_reward = 0
@@ -310,9 +311,6 @@ class ProjectAgent:
             id_experiment (int, optional): ID of the experiment. Defaults to config.ID_BEST_MODEL.
         """
         self.id_experiment = id_experiment
-        self.env = TimeLimit(
-            env=FastHIVPatient(domain_randomization=False), max_episode_steps=200
-        )
         self.params = config.EXPERIMENTS[id_experiment]
         self.params[names.DEVICE] = check_device(device=self.params[names.DEVICE])
         self.update_params(
@@ -401,6 +399,10 @@ class ProjectAgent:
 
 
 if __name__ == "__main__":
-    agent = ProjectAgent(id_experiment=8)
-    agent.model.train(env=agent.env)
+    agent = ProjectAgent(id_experiment=2)
+    agent.model.train(
+        env=TimeLimit(
+            env=FastHIVPatient(domain_randomization=False), max_episode_steps=200
+        )
+    )
     agent.save()
