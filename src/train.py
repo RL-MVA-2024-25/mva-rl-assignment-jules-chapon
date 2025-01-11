@@ -388,11 +388,13 @@ class ProjectAgent:
         Returns:
             _ProjectAgent: Pre-trained agent.
         """
-        with open(
-            os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "rb"
-        ) as file:
-            agent = pkl.load(file)
-            self.best_model = agent.best_model
+        # with open(
+        #     os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "rb"
+        # ) as file:
+        #     agent = pkl.load(file)
+        #     self.best_model = agent.best_model
+        # print("Agent loaded.")
+        self.best_model = torch.load("best_model.pth", weights_only=False)
         print("Agent loaded.")
 
 
