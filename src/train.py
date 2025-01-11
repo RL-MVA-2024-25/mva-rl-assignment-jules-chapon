@@ -299,18 +299,15 @@ _ProjectAgent = typing.TypeVar(name="_ProjectAgent", bound="ProjectAgent")
 
 
 class ProjectAgent:
-    def __init__(
-        self: _ProjectAgent, id_experiment: int = config.ID_BEST_MODEL
-    ) -> None:
+    def __init__(self: _ProjectAgent) -> None:
         """
         Initialize class instance.
 
         Args:
             self (_ProjectAgent): Class instance.
-            id_experiment (int, optional): ID of the experiment. Defaults to config.ID_BEST_MODEL.
         """
-        self.id_experiment = id_experiment
-        self.params = config.EXPERIMENTS[id_experiment]
+        self.id_experiment = 8
+        self.params = config.EXPERIMENTS[self.id_experiment]
         self.params[names.DEVICE] = check_device(device=self.params[names.DEVICE])
         self.update_params(
             state_space_dimension=6,
@@ -319,8 +316,6 @@ class ProjectAgent:
         if self.params[names.MODEL] == names.DQN:
             self.model = DQN(params=self.params)
         self.best_model = None
-        self.folder = "saved_models"
-        os.makedirs(self.folder, exist_ok=True)
         print("Agent created.")
 
     def update_params(
@@ -357,7 +352,7 @@ class ProjectAgent:
             int: Action to take.
         """
         if use_random:
-            return self.env.action_space.sample()
+            return 0
         state_tensor = (
             torch.FloatTensor(observation).unsqueeze(0).to(self.params[names.DEVICE])
         )
@@ -373,6 +368,8 @@ class ProjectAgent:
         """
         self.best_model = self.model.best_model
         self.model = None
+        self.folder = "src/saved_models"
+        os.makedirs(self.folder, exist_ok=True)
         with open(
             os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "wb"
         ) as file:
@@ -389,15 +386,15 @@ class ProjectAgent:
         Returns:
             _ProjectAgent: Pre-trained agent.
         """
-        # with open(
-        #     os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "rb"
-        # ) as file:
-        #     agent = pkl.load(file)
-        #     self.best_model = agent.best_model
-        # print("Agent loaded.")
-        self.best_model = torch.load(
-            Path(__file__).parent.parent / "src/best_model.pkl", weights_only=False
-        )
+        with open(
+            os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "rb"
+        ) as file:
+            agent = pkl.load(file)
+            self.best_model = agent.best_model
+        print("Agent loaded.")
+        # self.best_model = torch.load(
+        #     Path(__file__).parent.parent / "src/best_model.pkl", weights_only=False
+        # )
         print("Agent loaded.")
 
 
