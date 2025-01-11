@@ -13,7 +13,7 @@ from copy import deepcopy
 from gymnasium.wrappers import TimeLimit
 from typing import Any, Dict, List
 
-from env_hiv import HIVPatient
+from fast_env import FastHIVPatient
 import names as names
 import config as config
 
@@ -232,7 +232,7 @@ class DQN:
             loss.backward()
             self.optimizer.step()
 
-    def train(self: _DQN, env: HIVPatient):
+    def train(self: _DQN, env: FastHIVPatient):
         """
         Train the model.
 
@@ -311,7 +311,7 @@ class ProjectAgent:
         """
         self.id_experiment = id_experiment
         self.env = TimeLimit(
-            env=HIVPatient(domain_randomization=False), max_episode_steps=200
+            env=FastHIVPatient(domain_randomization=False), max_episode_steps=200
         )
         self.params = config.EXPERIMENTS[id_experiment]
         self.params[names.DEVICE] = check_device(device=self.params[names.DEVICE])
