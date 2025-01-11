@@ -10,6 +10,7 @@ import torch.nn as nn
 import typing
 
 from copy import deepcopy
+from pathlib import Path
 from typing import Any, Dict, List
 
 from env_hiv import HIVPatient
@@ -394,7 +395,9 @@ class ProjectAgent:
         #     agent = pkl.load(file)
         #     self.best_model = agent.best_model
         # print("Agent loaded.")
-        self.best_model = torch.load("best_model.pth", weights_only=False)
+        self.best_model = torch.load(
+            Path(__file__).parent.parent / "src/best_model.pkl", weights_only=False
+        )
         print("Agent loaded.")
 
 
