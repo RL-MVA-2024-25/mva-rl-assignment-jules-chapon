@@ -313,9 +313,9 @@ class ProjectAgent:
             state_space_dimension=6,
             action_space_dimension=4,
         )
-        # if self.params[names.MODEL] == names.DQN:
-        #     self.model = DQN(params=self.params)
-        self.best_model = None
+        if self.params[names.MODEL] == names.DQN:
+            self.model = DQN(params=self.params)
+            self.best_model = self.model.best_model
         self.folder = "saved_models"
 
     def update_params(
@@ -353,10 +353,14 @@ class ProjectAgent:
         """
         if use_random:
             return 0
-        state_tensor = (
-            torch.FloatTensor(observation).unsqueeze(0).to(self.params[names.DEVICE])
-        )
-        Q_values = self.best_model(state_tensor)
+        self.best_model.eval()
+        with torch.no_grad():
+            state_tensor = (
+                torch.FloatTensor(observation)
+                .unsqueeze(0)
+                .to(self.params[names.DEVICE])
+            )
+            Q_values = self.best_model(state_tensor)
         return torch.argmax(Q_values, dim=1).item()
 
     def save(self: _ProjectAgent) -> None:
@@ -392,9 +396,11 @@ class ProjectAgent:
         #     self.best_model = agent.best_model
         # print("Agent loaded.")
         folder = os.path.join(os.path.dirname(__file__))
-        self.best_model = torch.load(
-            os.path.join(folder, f"{self.folder}/agent_{self.id_experiment}.pkl"),
-            weights_only=False,
+        self.best_model.load_state_dict(
+            torch.load(
+                os.path.join(folder, f"{self.folder}/agent_{self.id_experiment}.pth"),
+                weights_only=True,
+            )
         )
 
 
