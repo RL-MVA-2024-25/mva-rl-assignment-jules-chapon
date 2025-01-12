@@ -360,7 +360,7 @@ class ProjectAgent:
             Q_values = self.model.network(state_tensor)
         return torch.argmax(Q_values, dim=1).item()
 
-    def save(self: _ProjectAgent) -> None:
+    def save(self: _ProjectAgent, path: str) -> None:
         """
         Save the agent.
 
@@ -393,7 +393,9 @@ class ProjectAgent:
 
 # if __name__ == "__main__":
 #     from fast_env import FastHIVPatient
-#     agent = ProjectAgent(id_experiment=2)
+#     from gymnasium.wrappers import TimeLimit
+
+#     agent = ProjectAgent(id_experiment=9)
 #     agent.model.train(
 #         env=TimeLimit(
 #             env=FastHIVPatient(domain_randomization=False), max_episode_steps=200
