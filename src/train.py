@@ -316,6 +316,7 @@ class ProjectAgent:
         if self.params[names.MODEL] == names.DQN:
             self.model = DQN(params=self.params)
         self.best_model = None
+        self.folder = "src/saved_models"
         print("Agent created.")
 
     def update_params(
@@ -368,12 +369,12 @@ class ProjectAgent:
         """
         self.best_model = self.model.best_model
         self.model = None
-        self.folder = "src/saved_models"
         os.makedirs(self.folder, exist_ok=True)
-        with open(
-            os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "wb"
-        ) as file:
-            pkl.dump(self, file)
+        # with open(
+        #     os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "wb"
+        # ) as file:
+        #     pkl.dump(self, file)
+        torch.save(self.best_model, f"{self.folder}/agent_{self.id_experiment}.pkl")
         print("Agent saved.")
 
     def load(self: _ProjectAgent) -> _ProjectAgent:
@@ -386,15 +387,15 @@ class ProjectAgent:
         Returns:
             _ProjectAgent: Pre-trained agent.
         """
-        with open(
-            os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "rb"
-        ) as file:
-            agent = pkl.load(file)
-            self.best_model = agent.best_model
-        print("Agent loaded.")
-        # self.best_model = torch.load(
-        #     Path(__file__).parent.parent / "src/best_model.pkl", weights_only=False
-        # )
+        # with open(
+        #     os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "rb"
+        # ) as file:
+        #     agent = pkl.load(file)
+        #     self.best_model = agent.best_model
+        # print("Agent loaded.")
+        self.best_model = torch.load(
+            f"{self.folder}/agent_{self.id_experiment}.pkl", weights_only=False
+        )
         print("Agent loaded.")
 
 
