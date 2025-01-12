@@ -306,7 +306,7 @@ class ProjectAgent:
         Args:
             self (_ProjectAgent): Class instance.
         """
-        self.id_experiment = 9
+        self.id_experiment = 8
         self.params = config.EXPERIMENTS[self.id_experiment]
         self.params[names.DEVICE] = check_device(device=self.params[names.DEVICE])
         self.update_params(
