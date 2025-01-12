@@ -2,7 +2,6 @@
 
 import numpy as np
 import os
-import pickle as pkl
 import random
 import time
 import torch
@@ -10,7 +9,6 @@ import torch.nn as nn
 import typing
 
 from copy import deepcopy
-from pathlib import Path
 from typing import Any, Dict, List
 
 from env_hiv import HIVPatient
@@ -315,8 +313,6 @@ class ProjectAgent:
         )
         if self.params[names.MODEL] == names.DQN:
             self.model = DQN(params=self.params)
-            self.best_model = self.model.best_model
-        self.folder = "saved_models"
 
     def update_params(
         self: _ProjectAgent,
@@ -353,14 +349,14 @@ class ProjectAgent:
         """
         if use_random:
             return 0
-        self.best_model.eval()
+        self.model.best_model.eval()
         with torch.no_grad():
             state_tensor = (
                 torch.FloatTensor(observation)
                 .unsqueeze(0)
                 .to(self.params[names.DEVICE])
             )
-            Q_values = self.best_model(state_tensor)
+            Q_values = self.model.best_model(state_tensor)
         return torch.argmax(Q_values, dim=1).item()
 
     def save(self: _ProjectAgent) -> None:
@@ -370,36 +366,26 @@ class ProjectAgent:
         Args:
             self (_ProjectAgent): Class instance.
         """
-        self.best_model = self.model.best_model
-        self.model = None
-        os.makedirs(self.folder, exist_ok=True)
-        # with open(
-        #     os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "wb"
-        # ) as file:
-        #     pkl.dump(self, file)
-        torch.save(self.best_model, f"{self.folder}/agent_{self.id_experiment}.pkl")
+        folder = os.path.join("src", "saved_models")
+        os.makedirs(folder, exist_ok=True)
+        torch.save(
+            self.model.best_model.state_dict(),
+            os.path.join(folder, f"agent_{self.id_experiment}.pth"),
+        )
 
-    def load(self: _ProjectAgent) -> _ProjectAgent:
+    def load(self: _ProjectAgent) -> None:
         """
         Load a pre-trained agent.
 
         Args:
             self (_ProjectAgent): Class isnatnce.
-
-        Returns:
-            _ProjectAgent: Pre-trained agent.
         """
-        # with open(
-        #     os.path.join(self.folder, f"agent_{self.id_experiment}.pkl"), "rb"
-        # ) as file:
-        #     agent = pkl.load(file)
-        #     self.best_model = agent.best_model
-        # print("Agent loaded.")
-        folder = os.path.join(os.path.dirname(__file__))
-        self.best_model.load_state_dict(
+        folder = os.path.join("src", "saved_models")
+        self.model.best_model.load_state_dict(
             torch.load(
-                os.path.join(folder, f"{self.folder}/agent_{self.id_experiment}.pth"),
+                os.path.join(folder, f"agent_{self.id_experiment}.pth"),
                 weights_only=True,
+                map_location=torch.device(self.params[names.DEVICE]),
             )
         )
 

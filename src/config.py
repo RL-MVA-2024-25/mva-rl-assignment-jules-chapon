@@ -7,7 +7,7 @@ ID_BEST_MODEL = 8
 EXPERIMENTS = {
     1: {
         names.MODEL: names.DQN,
-        names.DEVICE: names.CUDA,
+        names.DEVICE: names.CPU,
         names.LEARNING_RATE: 0.001,
         names.HIDDEN_SIZE: 64,
         names.NB_LAYERS: 2,
@@ -28,7 +28,7 @@ EXPERIMENTS = {
     },
     2: {
         names.MODEL: names.DQN,
-        names.DEVICE: names.CUDA,
+        names.DEVICE: names.CPU,
         names.LEARNING_RATE: 0.001,
         names.HIDDEN_SIZE: 64,
         names.NB_LAYERS: 2,
@@ -49,7 +49,7 @@ EXPERIMENTS = {
     },
     3: {
         names.MODEL: names.DQN,
-        names.DEVICE: names.CUDA,
+        names.DEVICE: names.CPU,
         names.LEARNING_RATE: 0.001,
         names.HIDDEN_SIZE: 128,
         names.NB_LAYERS: 2,
@@ -70,7 +70,7 @@ EXPERIMENTS = {
     },
     4: {
         names.MODEL: names.DQN,
-        names.DEVICE: names.CUDA,
+        names.DEVICE: names.CPU,
         names.LEARNING_RATE: 0.001,
         names.HIDDEN_SIZE: 128,
         names.NB_LAYERS: 3,
@@ -91,7 +91,7 @@ EXPERIMENTS = {
     },
     5: {
         names.MODEL: names.DQN,
-        names.DEVICE: names.CUDA,
+        names.DEVICE: names.CPU,
         names.LEARNING_RATE: 0.001,
         names.HIDDEN_SIZE: 256,
         names.NB_LAYERS: 1,
@@ -112,7 +112,7 @@ EXPERIMENTS = {
     },
     6: {
         names.MODEL: names.DQN,
-        names.DEVICE: names.CUDA,
+        names.DEVICE: names.CPU,
         names.LEARNING_RATE: 0.001,
         names.HIDDEN_SIZE: 128,
         names.NB_LAYERS: 2,
@@ -133,7 +133,7 @@ EXPERIMENTS = {
     },
     7: {
         names.MODEL: names.DQN,
-        names.DEVICE: names.CUDA,
+        names.DEVICE: names.CPU,
         names.LEARNING_RATE: 0.001,
         names.HIDDEN_SIZE: 256,
         names.NB_LAYERS: 2,
@@ -154,7 +154,7 @@ EXPERIMENTS = {
     },
     8: {
         names.MODEL: names.DQN,
-        names.DEVICE: names.CUDA,
+        names.DEVICE: names.CPU,
         names.LEARNING_RATE: 0.0005,
         names.HIDDEN_SIZE: 256,
         names.NB_LAYERS: 2,
