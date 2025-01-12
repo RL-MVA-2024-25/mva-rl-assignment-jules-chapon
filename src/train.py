@@ -12,8 +12,67 @@ from copy import deepcopy
 from typing import Any, Dict, List
 
 from env_hiv import HIVPatient
-import names as names
-import config as config
+
+
+### NAMES
+
+MODEL = "model"
+DQN = "DQN"
+STATE_SPACE_DIMENSION = "state_space_dimension"
+ACTION_SPACE_DIMENSION = "action_space_dimension"
+DEVICE = "device"
+CUDA = "cuda"
+CPU = "cpu"
+GAMMA = "gamma"
+MEMORY_CAPACITY = "memory_capacity"
+EPSILON_MIN = "epsilon_min"
+EPSILON_MAX = "epsilon_max"
+EPSILON_DECAY_PERIOD = "epsilon_decay_period"
+EPSILON_DECAY_DELAY = "epsilon_decay_delay"
+EPSILON_STEP = "epsilon_step"
+GRADIENT_STEPS = "gradient_steps"
+UPDATE_FREQUENCY = "update_frequency"
+UPDATE_TAU = "update_tau"
+UPDATE_STRATEGY = "update_strategy"
+EMA = "ema"
+NB_LAYERS = "nb_layers"
+HIDDEN_SIZE = "hidden_size"
+NB_EPOCHS = "nb_epochs"
+LEARNING_RATE = "learning_rate"
+BATCH_SIZE = "batch_size"
+CRITERION = "criterion"
+SMOOTH_L1 = "smooth_l1"
+OPTIMIZER = "optimizer"
+ADAM = "adam"
+
+### CONFIG
+
+ID_BEST_MODEL = 8
+
+EXPERIMENTS = {
+    8: {
+        MODEL: DQN,
+        DEVICE: CPU,
+        LEARNING_RATE: 0.0005,
+        HIDDEN_SIZE: 256,
+        NB_LAYERS: 2,
+        GAMMA: 0.90,
+        MEMORY_CAPACITY: 40000,
+        EPSILON_MIN: 0.07,
+        EPSILON_MAX: 1.0,
+        EPSILON_DECAY_PERIOD: 40000,
+        EPSILON_DECAY_DELAY: 500,
+        BATCH_SIZE: 1000,
+        GRADIENT_STEPS: 2,
+        UPDATE_STRATEGY: EMA,
+        UPDATE_FREQUENCY: 40,
+        UPDATE_TAU: 0.005,
+        CRITERION: SMOOTH_L1,
+        OPTIMIZER: ADAM,
+        NB_EPOCHS: 500,
+    },
+}
+
 
 ### UTILIY FUNCTIONS
 
@@ -28,10 +87,10 @@ def check_device(device: str) -> str:
     Returns:
         str: Final device.
     """
-    if (device == names.CUDA) and (torch.cuda.is_available()):
-        return names.CUDA
+    if (device == CUDA) and (torch.cuda.is_available()):
+        return CUDA
     else:
-        return names.CPU
+        return CPU
 
 
 def greedy_action(
@@ -48,7 +107,7 @@ def greedy_action(
     Returns:
         int: Greedy action to take.
     """
-    device = check_device(device=params[names.DEVICE])
+    device = check_device(device=params[DEVICE])
     with torch.no_grad():
         Q = network(torch.Tensor(state).unsqueeze(0).to(device))
         return torch.argmax(Q).item()
@@ -67,7 +126,7 @@ def create_criterion(loss: str):
     Returns:
         Loss function.
     """
-    if loss == names.SMOOTH_L1:
+    if loss == SMOOTH_L1:
         return nn.SmoothL1Loss()
     else:
         raise ValueError("This loss function is not supported")
@@ -88,7 +147,7 @@ def create_optimizer(optimizer: str, network: nn.Module, lr: float):
     Returns:
         Optimizer.
     """
-    if optimizer == names.ADAM:
+    if optimizer == ADAM:
         return torch.optim.Adam(network.parameters(), lr=lr)
     else:
         raise ValueError("This optimizer is not supported")
@@ -106,10 +165,10 @@ class Memory:
             self (_Memory): Class instance.
             params (Dict[str, Any]): Parameters of the agent.
         """
-        self.max_memory = params[names.MEMORY_CAPACITY]
+        self.max_memory = params[MEMORY_CAPACITY]
         self.curr_memory = []
         self.position = 0
-        self.device = params[names.DEVICE]
+        self.device = params[DEVICE]
 
     def append(
         self: _Memory,
@@ -169,13 +228,13 @@ class DQN:
         """
         self.params = params
         self.memory = Memory(params=self.params)
-        self.network = self.create_network().to(self.params[names.DEVICE])
-        self.target_network = deepcopy(self.network).to(self.params[names.DEVICE])
-        self.criterion = create_criterion(loss=self.params[names.CRITERION])
+        self.network = self.create_network().to(self.params[DEVICE])
+        self.target_network = deepcopy(self.network).to(self.params[DEVICE])
+        self.criterion = create_criterion(loss=self.params[CRITERION])
         self.optimizer = create_optimizer(
-            optimizer=self.params[names.OPTIMIZER],
+            optimizer=self.params[OPTIMIZER],
             network=self.network,
-            lr=self.params[names.LEARNING_RATE],
+            lr=self.params[LEARNING_RATE],
         )
         self.best_model = self.network
         self.best_reward = -float("inf")
@@ -192,22 +251,16 @@ class DQN:
             nn.Module: Neural network.
         """
         layers = [
-            nn.Linear(
-                self.params[names.STATE_SPACE_DIMENSION], self.params[names.HIDDEN_SIZE]
-            ),
+            nn.Linear(self.params[STATE_SPACE_DIMENSION], self.params[HIDDEN_SIZE]),
             nn.ReLU(),
         ]
-        for _ in range(self.params[names.NB_LAYERS]):
-            layers.append(
-                nn.Linear(
-                    self.params[names.HIDDEN_SIZE], self.params[names.HIDDEN_SIZE]
-                )
-            )
+        for _ in range(self.params[NB_LAYERS]):
+            layers.append(nn.Linear(self.params[HIDDEN_SIZE], self.params[HIDDEN_SIZE]))
             layers.append(nn.ReLU())
         layers.append(
             nn.Linear(
-                self.params[names.HIDDEN_SIZE],
-                self.params[names.ACTION_SPACE_DIMENSION],
+                self.params[HIDDEN_SIZE],
+                self.params[ACTION_SPACE_DIMENSION],
             )
         )
         network = nn.Sequential(*layers)
@@ -220,10 +273,10 @@ class DQN:
         Args:
             self (_DQN): Class instance.
         """
-        if len(self.memory) > self.params[names.BATCH_SIZE]:
-            X, A, R, Y, D = self.memory.sample(self.params[names.BATCH_SIZE])
+        if len(self.memory) > self.params[BATCH_SIZE]:
+            X, A, R, Y, D = self.memory.sample(self.params[BATCH_SIZE])
             QYmax = self.target_network(Y).max(1)[0].detach()
-            update = torch.addcmul(R, 1 - D, QYmax, value=self.params[names.GAMMA])
+            update = torch.addcmul(R, 1 - D, QYmax, value=self.params[GAMMA])
             QXA = self.network(X).gather(1, A.to(torch.long).unsqueeze(1))
             loss = self.criterion(QXA, update.unsqueeze(1))
             self.optimizer.zero_grad()
@@ -241,15 +294,15 @@ class DQN:
         epoch = 0
         epoch_cum_reward = 0
         state, _ = env.reset()
-        epsilon = self.params[names.EPSILON_MAX]
+        epsilon = self.params[EPSILON_MAX]
         step = 0
         max_reward = -float("inf")
-        while epoch < self.params[names.NB_EPOCHS]:
+        while epoch < self.params[NB_EPOCHS]:
             start_time = time.time()
-            if step > self.params[names.EPSILON_DECAY_DELAY]:
+            if step > self.params[EPSILON_DECAY_DELAY]:
                 epsilon = max(
-                    self.params[names.EPSILON_MIN],
-                    epsilon - self.params[names.EPSILON_STEP],
+                    self.params[EPSILON_MIN],
+                    epsilon - self.params[EPSILON_STEP],
                 )
             if np.random.rand() < epsilon:
                 action = env.action_space.sample()
@@ -260,12 +313,12 @@ class DQN:
             next_state, reward, done, trunc, _ = env.step(action)
             self.memory.append(state, action, reward, next_state, done)
             epoch_cum_reward += reward
-            for _ in range(self.params[names.GRADIENT_STEPS]):
+            for _ in range(self.params[GRADIENT_STEPS]):
                 self.gradient_step()
-            if self.params[names.UPDATE_STRATEGY] == names.EMA:
+            if self.params[UPDATE_STRATEGY] == EMA:
                 target_state_dict = self.target_network.state_dict()
                 network_state_dict = self.network.state_dict()
-                tau = self.params[names.UPDATE_TAU]
+                tau = self.params[UPDATE_TAU]
                 for key in network_state_dict:
                     target_state_dict[key] = (
                         tau * network_state_dict[key]
@@ -305,13 +358,13 @@ class ProjectAgent:
             self (_ProjectAgent): Class instance.
         """
         self.id_experiment = 8
-        self.params = config.EXPERIMENTS[self.id_experiment]
-        self.params[names.DEVICE] = check_device(device=self.params[names.DEVICE])
+        self.params = EXPERIMENTS[self.id_experiment]
+        self.params[DEVICE] = check_device(device=self.params[DEVICE])
         self.update_params(
             state_space_dimension=6,
             action_space_dimension=4,
         )
-        if self.params[names.MODEL] == names.DQN:
+        if self.params[MODEL] == DQN:
             self.model = DQN(params=self.params)
 
     def update_params(
@@ -327,11 +380,11 @@ class ProjectAgent:
             state_space_dimension (int): Dimension of the state space.
             action_space_dimension (int): Dimension of the action space.
         """
-        self.params[names.STATE_SPACE_DIMENSION] = state_space_dimension
-        self.params[names.ACTION_SPACE_DIMENSION] = action_space_dimension
-        self.params[names.EPSILON_STEP] = (
-            self.params[names.EPSILON_MAX] - self.params[names.EPSILON_MIN]
-        ) / self.params[names.EPSILON_DECAY_PERIOD]
+        self.params[STATE_SPACE_DIMENSION] = state_space_dimension
+        self.params[ACTION_SPACE_DIMENSION] = action_space_dimension
+        self.params[EPSILON_STEP] = (
+            self.params[EPSILON_MAX] - self.params[EPSILON_MIN]
+        ) / self.params[EPSILON_DECAY_PERIOD]
 
     def act(
         self: _ProjectAgent, observation: List[float], use_random: bool = False
@@ -352,9 +405,7 @@ class ProjectAgent:
         self.model.best_model.eval()
         with torch.no_grad():
             state_tensor = (
-                torch.FloatTensor(observation)
-                .unsqueeze(0)
-                .to(self.params[names.DEVICE])
+                torch.FloatTensor(observation).unsqueeze(0).to(self.params[DEVICE])
             )
             Q_values = self.model.best_model(state_tensor)
         return torch.argmax(Q_values, dim=1).item()
@@ -385,7 +436,7 @@ class ProjectAgent:
             torch.load(
                 os.path.join(folder, f"agent_{self.id_experiment}.pth"),
                 weights_only=True,
-                map_location=torch.device(self.params[names.DEVICE]),
+                map_location=torch.device(self.params[DEVICE]),
             )
         )
 
