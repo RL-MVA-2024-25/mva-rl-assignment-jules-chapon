@@ -306,7 +306,7 @@ class ProjectAgent:
         Args:
             self (_ProjectAgent): Class instance.
         """
-        self.id_experiment = 8
+        self.id_experiment = 9
         self.params = config.EXPERIMENTS[self.id_experiment]
         self.params[names.DEVICE] = check_device(device=self.params[names.DEVICE])
         self.update_params(
@@ -360,7 +360,7 @@ class ProjectAgent:
             Q_values = self.model.network(state_tensor)
         return torch.argmax(Q_values, dim=1).item()
 
-    def save(self: _ProjectAgent, path: str) -> None:
+    def save(self: _ProjectAgent, path: str | None = None) -> None:
         """
         Save the agent.
 
@@ -391,14 +391,14 @@ class ProjectAgent:
         )
 
 
-# if __name__ == "__main__":
-#     from fast_env import FastHIVPatient
-#     from gymnasium.wrappers import TimeLimit
+if __name__ == "__main__":
+    from fast_env import FastHIVPatient
+    from gymnasium.wrappers import TimeLimit
 
-#     agent = ProjectAgent(id_experiment=9)
-#     agent.model.train(
-#         env=TimeLimit(
-#             env=FastHIVPatient(domain_randomization=False), max_episode_steps=200
-#         )
-#     )
-#     agent.save()
+    agent = ProjectAgent()
+    agent.model.train(
+        env=TimeLimit(
+            env=FastHIVPatient(domain_randomization=False), max_episode_steps=200
+        )
+    )
+    agent.save()
