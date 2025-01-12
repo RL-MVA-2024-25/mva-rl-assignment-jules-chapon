@@ -313,11 +313,10 @@ class ProjectAgent:
             state_space_dimension=6,
             action_space_dimension=4,
         )
-        if self.params[names.MODEL] == names.DQN:
-            self.model = DQN(params=self.params)
+        # if self.params[names.MODEL] == names.DQN:
+        #     self.model = DQN(params=self.params)
         self.best_model = None
-        self.folder = "src/saved_models"
-        print("Agent created.")
+        self.folder = "saved_models"
 
     def update_params(
         self: _ProjectAgent,
@@ -375,7 +374,6 @@ class ProjectAgent:
         # ) as file:
         #     pkl.dump(self, file)
         torch.save(self.best_model, f"{self.folder}/agent_{self.id_experiment}.pkl")
-        print("Agent saved.")
 
     def load(self: _ProjectAgent) -> _ProjectAgent:
         """
@@ -393,10 +391,11 @@ class ProjectAgent:
         #     agent = pkl.load(file)
         #     self.best_model = agent.best_model
         # print("Agent loaded.")
+        folder = os.path.join(os.path.dirname(__file__))
         self.best_model = torch.load(
-            f"{self.folder}/agent_{self.id_experiment}.pkl", weights_only=False
+            os.path.join(folder, f"{self.folder}/agent_{self.id_experiment}.pkl"),
+            weights_only=False,
         )
-        print("Agent loaded.")
 
 
 # if __name__ == "__main__":
