@@ -370,7 +370,7 @@ class ProjectAgent:
         folder = os.path.join("src", "saved_models")
         os.makedirs(folder, exist_ok=True)
         torch.save(
-            self.model.network.state_dict(),
+            self.model.best_model.state_dict(),
             os.path.join(folder, f"agent_{self.id_experiment}.pth"),
         )
 
@@ -385,7 +385,7 @@ class ProjectAgent:
         self.model.network.load_state_dict(
             torch.load(
                 os.path.join(folder, f"agent_{self.id_experiment}.pth"),
-                weights_only=False,
+                weights_only=True,
                 map_location=torch.device(self.params[names.DEVICE]),
             )
         )
