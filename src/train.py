@@ -6,10 +6,9 @@ import random
 import time
 import torch
 import torch.nn as nn
-import typing
 
 from copy import deepcopy
-from typing import Any, Dict, List
+from gymnasium.wrappers import TimeLimit
 
 from env_hiv import HIVPatient
 import names
@@ -35,16 +34,14 @@ def check_device(device: str) -> str:
         return names.CPU
 
 
-def greedy_action(
-    params: Dict[str, Any], network: nn.Module, state: List[float]
-) -> int:
+def greedy_action(params: dict, network: nn.Module, state: list[float]) -> int:
     """
     Choose the greedy action.
 
     Args:
-        params (Dict[str, Any]): Parameters of the agent.
+        params (dict): Parameters of the agent.
         network (nn.Module): Neural network.
-        state (List[float]): State at previous time.
+        state (list[float]): State at previous time.
 
     Returns:
         int: Greedy action to take.
@@ -95,17 +92,14 @@ def create_optimizer(optimizer: str, network: nn.Module, lr: float):
         raise ValueError("This optimizer is not supported")
 
 
-_Memory = typing.TypeVar(name="_Memory", bound="Memory")
-
-
 class Memory:
-    def __init__(self: _Memory, params: Dict[str, Any]) -> None:
+    def __init__(self, params: dict) -> None:
         """
         Initialize class instance.
 
         Args:
             self (_Memory): Class instance.
-            params (Dict[str, Any]): Parameters of the agent.
+            params (dict): Parameters of the agent.
         """
         self.max_memory = params[names.MEMORY_CAPACITY]
         self.curr_memory = []
@@ -113,8 +107,8 @@ class Memory:
         self.device = params[names.DEVICE]
 
     def append(
-        self: _Memory,
-        state: List[float],
+        self,
+        state: list[float],
         action: int,
         reward: float,
         next_state: int,
@@ -125,7 +119,7 @@ class Memory:
 
         Args:
             self (_Memory): Class instance.
-            state (List[float]): Previous state.
+            state (list[float]): Previous state.
             action (int): Action.
             reward (float): Reward.
             next_state (int): Next state.
@@ -136,7 +130,7 @@ class Memory:
         self.curr_memory[self.position] = (state, action, reward, next_state, done)
         self.position = (self.position + 1) % self.max_memory
 
-    def sample(self: _Memory, batch_size: int) -> List:
+    def sample(self, batch_size: int) -> list:
         """
         Sample elements from the memory.
 
@@ -145,28 +139,25 @@ class Memory:
             batch_size (int): Number of elements to sample.
 
         Returns:
-            List: List of samples.
+            list: List of samples.
         """
         batch = random.sample(self.curr_memory, batch_size)
         return list(
             map(lambda x: torch.Tensor(np.array(x)).to(self.device), list(zip(*batch)))
         )
 
-    def __len__(self: _Memory) -> int:
+    def __len__(self) -> int:
         return len(self.curr_memory)
 
 
-_DQN = typing.TypeVar(name="_DQN", bound="DQN")
-
-
 class DQN:
-    def __init__(self: _DQN, params: Dict[str, Any]) -> None:
+    def __init__(self, params: dict) -> None:
         """
         Initialize class instance.
 
         Args:
             self (_DQN): Class instance.
-            params (Dict[str, Any]): Parameters of teh agent.
+            params (dict): Parameters of teh agent.
         """
         self.params = params
         self.memory = Memory(params=self.params)
@@ -175,7 +166,7 @@ class DQN:
         self.best_reward = -float("inf")
         self.epoch_rewards = []
 
-    def create_network(self: _DQN) -> nn.Module:
+    def create_network(self) -> nn.Module:
         """
         Create the network of the DQN.
 
@@ -207,7 +198,7 @@ class DQN:
         network = nn.Sequential(*layers)
         return network
 
-    def gradient_step(self: _DQN) -> None:
+    def gradient_step(self) -> None:
         """
         Make a gradient step.
 
@@ -224,7 +215,7 @@ class DQN:
             loss.backward()
             self.optimizer.step()
 
-    def train(self: _DQN, env: HIVPatient):
+    def train(self, env: HIVPatient):
         """
         Train the model.
 
@@ -295,18 +286,15 @@ class DQN:
         print(f"Best reward : {self.best_reward/1e10:.2f}.1e10")
 
 
-_ProjectAgent = typing.TypeVar(name="_ProjectAgent", bound="ProjectAgent")
-
-
 class ProjectAgent:
-    def __init__(self: _ProjectAgent) -> None:
+    def __init__(self, id_experiment: int = 8) -> None:
         """
         Initialize class instance.
 
         Args:
             self (_ProjectAgent): Class instance.
         """
-        self.id_experiment = 8
+        self.id_experiment = id_experiment
         self.params = config.EXPERIMENTS[self.id_experiment]
         self.params[names.DEVICE] = check_device(device=self.params[names.DEVICE])
         self.update_params(
@@ -316,7 +304,7 @@ class ProjectAgent:
         self.model = DQN(params=self.params)
 
     def update_params(
-        self: _ProjectAgent,
+        self,
         state_space_dimension: int,
         action_space_dimension: int,
     ) -> None:
@@ -334,15 +322,13 @@ class ProjectAgent:
             self.params[names.EPSILON_MAX] - self.params[names.EPSILON_MIN]
         ) / self.params[names.EPSILON_DECAY_PERIOD]
 
-    def act(
-        self: _ProjectAgent, observation: List[float], use_random: bool = False
-    ) -> int:
+    def act(self, observation: list[float], use_random: bool = False) -> int:
         """
         Decide whith action to take given an observation.
 
         Args:
             self (_ProjectAgent): Class instance.
-            observation (List[float]): Observation.
+            observation (list[float]): Observation.
             use_random (bool, optional): Whether to do a random aciton or not. Defaults to False.
 
         Returns:
@@ -360,7 +346,7 @@ class ProjectAgent:
             Q_values = self.model.network(state_tensor)
         return torch.argmax(Q_values, dim=1).item()
 
-    def save(self: _ProjectAgent, path: str | None = None) -> None:
+    def save(self, path: str | None = None) -> None:
         """
         Save the agent.
 
@@ -374,7 +360,7 @@ class ProjectAgent:
             os.path.join(folder, f"agent_{self.id_experiment}.pth"),
         )
 
-    def load(self: _ProjectAgent) -> None:
+    def load(self) -> None:
         """
         Load a pre-trained agent.
 
@@ -386,19 +372,14 @@ class ProjectAgent:
             torch.load(
                 os.path.join(folder, f"agent_{self.id_experiment}.pth"),
                 weights_only=True,
-                map_location=torch.device(self.params[names.DEVICE]),
+                map_location="cpu",
             )
         )
 
 
 if __name__ == "__main__":
-    from fast_env import FastHIVPatient
-    from gymnasium.wrappers import TimeLimit
-
-    agent = ProjectAgent()
+    agent = ProjectAgent(id_experiment=2)
     agent.model.train(
-        env=TimeLimit(
-            env=FastHIVPatient(domain_randomization=False), max_episode_steps=200
-        )
+        env=TimeLimit(env=HIVPatient(domain_randomization=False), max_episode_steps=200)
     )
     agent.save()
